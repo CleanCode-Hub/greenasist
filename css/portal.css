@@ -174,6 +174,8 @@ main { max-width: 1080px; margin: auto; padding: 24px 16px 60px; }
 /* --- 11. Ventanas ----------------------------------------------------- */
 dialog { width: min(480px, calc(100% - 32px)); max-height: 92vh; overflow: auto; border: 1px solid var(--linea); border-radius: 18px; padding: 24px; background: var(--tarjeta); color: var(--tinta); }
 dialog::backdrop { background: rgba(8, 25, 36, .6); }
+@keyframes hoja-sube { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { dialog[open] { animation: none !important; } }
 /* Título + ✕ (+ buscador) que se quedan arriba al bajar en listas largas */
 .dialogo-cabecera { position: sticky; top: -24px; z-index: 2; margin: -24px -24px 0; padding: 24px 24px 10px; background: var(--tarjeta); border-bottom: 1px solid var(--linea); }
 .dialogo-titulo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -456,6 +458,10 @@ button.cal-dia:hover { border-color: var(--vivo); }
 .subpestanas button { flex: 1 1 auto; min-height: var(--toque); border: 0; border-radius: 10px; background: transparent; color: var(--tinta); padding: 8px 14px; }
 .subpestanas button small { display: inline-block; min-width: 1.6em; margin-left: 4px; padding: 1px 6px; border-radius: 99px; background: var(--tarjeta); color: var(--suave); font-size: .8rem; }
 .subpestanas button.activa { background: var(--tarjeta); color: var(--marca); box-shadow: 0 2px 8px rgba(16,50,74,.12); }
+/* Roster: elegir qué categoría se ve */
+.roster-elige { margin: 16px 0 6px; }
+.roster-selector button.alerta small { background: var(--rojo); color: #fff; }
+.roster.una { grid-template-columns: 1fr; }
 .subpestanas button.activa small { background: var(--marca); color: #fff; }
 @media (max-width: 640px) { .subpestanas { display: grid; grid-template-columns: 1fr 1fr; } }
 
@@ -520,6 +526,13 @@ button.cal-dia:hover { border-color: var(--vivo); }
   /* Ventanas: hoja que sube desde abajo, a lo ancho */
   dialog { width: 100%; max-width: 100%; max-height: 94vh; margin: auto 0 0; border-radius: 18px 18px 0 0; padding: 20px 16px; }
   .dialogo-cabecera { top: -20px; margin: -20px -16px 0; padding: 20px 16px 10px; }
+  /* Que se note que es una ventana ENCIMA de la página: sube desde abajo,
+     borde verde arriba, rayita para "jalar" y se ve un pedazo de la página */
+  dialog:not(#dialogo-lista):not(#dialogo-qr) { max-height: 88vh; border-top: 5px solid var(--vivo); padding-top: 26px; }
+  dialog:not(#dialogo-lista):not(#dialogo-qr)::before { content: ''; position: absolute; top: 8px; left: 50%; width: 44px; height: 5px; margin-left: -22px; border-radius: 99px; background: var(--linea); z-index: 3; }
+  dialog:not(#dialogo-lista):not(#dialogo-qr) .dialogo-cabecera { top: -26px; margin-top: -26px; padding-top: 26px; }
+  dialog[open] { animation: hoja-sube .25s ease-out; }
+  dialog::backdrop { background: rgba(8, 25, 36, .75); }
   #dialogo-lista { width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; padding: 0; }
   #dialogo-qr { width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; }
   .qr-pantalla .acciones { display: grid; grid-template-columns: 1fr 1fr; }

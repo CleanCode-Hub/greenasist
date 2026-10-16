@@ -116,6 +116,8 @@
           <h2>👥 Roster por categoría</h2>
           <p class="nota">Divisiones del torneo. Cada jugador juega en una categoría a la vez; para subirlo de división usa <strong>Cambiar</strong>.</p>
           <div class="metricas" id="roster-resumen"></div>
+          <p class="subtitulo roster-elige">Elige la categoría:</p>
+          <div class="subpestanas roster-selector" id="roster-selector" role="tablist" aria-label="Categoría"></div>
         </div>
         <div class="roster" id="roster-categorias"></div>
       </div>
@@ -363,8 +365,13 @@
   <!-- Nueva cuenta -->
   <dialog id="dialogo-nueva-cuenta" aria-labelledby="nueva-titulo">
     <form id="form-nueva-cuenta">
-      <h2 id="nueva-titulo">Nueva cuenta</h2>
-      <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+      <div class="dialogo-cabecera">
+        <div class="dialogo-titulo">
+          <h2 id="nueva-titulo">➕ Nueva cuenta</h2>
+          <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+        </div>
+      </div>
+      <label>Nombre completo<input name="nombre" required maxlength="120" autofocus></label>
       <label>Usuario<input name="usuario" required maxlength="100" autocapitalize="none" spellcheck="false" placeholder="Ej. chima, El Chino, Toño 7">
         <small>Puede llevar espacios, acentos o símbolos. No importan mayúsculas. Con esto inicia sesión.</small>
       </label>
@@ -440,8 +447,13 @@
   <!-- Editar cuenta (corregir nombre, usuario, rol o fecha de alta) -->
   <dialog id="dialogo-editar-cuenta" aria-labelledby="editar-titulo">
     <form id="form-editar-cuenta">
-      <h2 id="editar-titulo">✏️ Editar cuenta</h2>
-      <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+      <div class="dialogo-cabecera">
+        <div class="dialogo-titulo">
+          <h2 id="editar-titulo">✏️ Editar cuenta</h2>
+          <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+        </div>
+      </div>
+      <label>Nombre completo<input name="nombre" required maxlength="120" autofocus></label>
       <label>Usuario<input name="usuario" required maxlength="100" autocapitalize="none" spellcheck="false">
         <small id="editar-aviso-usuario">Si lo cambias, la persona deberá entrar con el usuario nuevo. Su contraseña no cambia.</small>
       </label>

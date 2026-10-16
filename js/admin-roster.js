@@ -11,6 +11,8 @@
   const { club, admin } = Portal;
   const resumen = document.getElementById('roster-resumen');
   const contenedor = document.getElementById('roster-categorias');
+  const selector = document.getElementById('roster-selector');
+  let elegida = null;   // categoría que se ve: id, 'sin' (sin categoría) o 'todas'
   const referencia = () => club.fechaReferencia(admin.datos.anio);
 
   // Fecha "desde" sugerida: si nunca ha tenido categoría, desde su alta
@@ -40,7 +42,7 @@
   // --- Pintar la pestaña --------------------------------------------
   admin.vistas.roster = function () {
     if (!admin.categorias) {
-      resumen.innerHTML = '';
+      resumen.innerHTML = ''; selector.innerHTML = '';
       contenedor.innerHTML = '<div class="tarjeta"><p class="vacio">Falta instalar <strong>09-roster.sql</strong> en Supabase para usar el roster.</p></div>';
       return;
     }
@@ -83,16 +85,40 @@
           : `<li class="vacio">${categoriaId ? 'Nadie todavía. Toca “+ Agregar”.' : '✓ Todos tienen categoría.'}</li>`}</ul>
       </div>`;
 
+    // Coaches primero en la lista de su categoría.
+    const de = id => jugadores.filter(j => admin.categoriaDe(j.id) === id).sort((a, b) => (b.rol === 'coach') - (a.rol === 'coach'));
+
+    // Selector: se ve una categoría a la vez ("Ver todas" las muestra juntas).
+    const valida = elegida === 'todas' || elegida === 'sin' || admin.categorias.some(c => c.id === elegida);
+    // Al entrar: la primera categoría que tenga jugadores (o la primera, si todas están vacías).
+    if (!valida) elegida = (admin.categorias.find(c => de(c.id).length) || admin.categorias[0])?.id ?? 'todas';
+    const opcion = (valor, texto, n, tono = '') =>
+      `<button type="button" role="tab" data-roster-ver="${valor}" class="${valor === elegida ? 'activa' : ''} ${tono}"
+        aria-selected="${valor === elegida}">${texto}${n == null ? '' : ` <small>${n}</small>`}</button>`;
+    selector.innerHTML =
+      admin.categorias.map(c => opcion(c.id, Portal.esc(c.nombre), de(c.id).length)).join('') +
+      opcion('sin', 'Sin categoría', sinCategoria.length, sinCategoria.length ? 'alerta' : '') +
+      opcion('todas', 'Ver todas', null);
+
+    const tarjetaDe = c => tarjeta(`🎯 ${Portal.esc(c.nombre)}`, de(c.id), c.id);
+    contenedor.classList.toggle('una', elegida !== 'todas');
     contenedor.innerHTML =
-      // Coaches primero en la lista de su categoría.
-      admin.categorias.map(c => tarjeta(`🎯 ${Portal.esc(c.nombre)}`,
-        jugadores.filter(j => admin.categoriaDe(j.id) === c.id).sort((a, b) => (b.rol === 'coach') - (a.rol === 'coach')), c.id)).join('') +
-      tarjeta('Sin categoría', sinCategoria, null);
+      elegida === 'todas' ? admin.categorias.map(tarjetaDe).join('') + tarjeta('Sin categoría', sinCategoria, null)
+      : elegida === 'sin' ? tarjeta('Sin categoría', sinCategoria, null)
+      : tarjetaDe(admin.categorias.find(c => c.id === elegida));
 
     if (dialogoAgregar.open) pintarCandidatos();
     if (dialogoCambiar.open) pintarCambiar();
     if (dialogoCoach.open) pintarCoaches();
   };
+
+  selector.addEventListener('click', e => {
+    const boton = e.target.closest('[data-roster-ver]');
+    if (!boton) return;
+    const valor = boton.dataset.rosterVer;
+    elegida = valor === 'todas' || valor === 'sin' ? valor : Number(valor);
+    admin.vistas.roster();
+  });
 
   contenedor.addEventListener('click', e => {
     const coach = e.target.closest('[data-roster-coach]');
