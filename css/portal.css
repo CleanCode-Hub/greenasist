@@ -297,6 +297,12 @@ button.cal-dia:hover { border-color: var(--vivo); }
 
 /* --- 17b. Llegada con QR ---------------------------------------------- */
 .lista-botones { margin: 0; flex-wrap: nowrap; }
+/* Celular: QR · PDF · Cerrar en su propia fila, debajo de la fecha */
+@media (max-width: 640px) {
+  .lista-encabezado { flex-wrap: wrap; }
+  .lista-encabezado > div:first-child { flex: 1 1 100%; }
+  .lista-botones { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+}
 #dialogo-qr { width: min(560px, calc(100% - 32px)); }
 .qr-pantalla { text-align: center; }
 .qr-pantalla h2 { font-size: 1.35rem; margin-bottom: 4px; }
@@ -315,6 +321,30 @@ button.cal-dia:hover { border-color: var(--vivo); }
 .llegada-icono { width: 110px; height: 110px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; font-size: 4rem; font-weight: 800; color: #fff; }
 .llegada-icono.bien { background: var(--verde); }
 .llegada-icono.mal { background: var(--rojo); }
+/* Llegada registrada por el propio jugador con el QR (en Pasar lista) */
+.marca-qr { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; background: #e3efff; color: #1d4f9c; font-size: .75rem; font-weight: 700; }
+
+/* Reporte de asistencia (📄 PDF): oculto en pantalla, solo al imprimir */
+#reporte { display: none; }
+@media print {
+  body.imprimiendo > *:not(#reporte) { display: none !important; }
+  body.imprimiendo { background: #fff; }
+  body.imprimiendo #reporte { display: block; color: #000; font: 11pt/1.35 system-ui, sans-serif; }
+  #reporte header { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+  #reporte header img { width: 56px; height: 56px; border-radius: 50%; }
+  #reporte h1 { font-size: 16pt; margin: 0; }
+  #reporte header p { margin: 2px 0 0; }
+  #reporte h2 { font-size: 12.5pt; margin: 18px 0 6px; }
+  #reporte h2 small { font-weight: 400; }
+  #reporte table { width: 100%; border-collapse: collapse; }
+  #reporte th, #reporte td { border: 1px solid #999; padding: 4px 8px; text-align: left; }
+  #reporte th { background: #eee; }
+  #reporte tr { break-inside: avoid; }
+  #reporte td:first-child, #reporte th:first-child { width: 2.5em; text-align: right; }
+  .reporte-resumen { font-size: 12pt; margin: 10px 0 0; }
+  .reporte-pie { margin-top: 18px; color: #555; font-size: 9pt; }
+}
+
 /* Botón y ventana para escanear el QR desde el portal */
 .boton-escanear { min-height: 64px; font-size: 1.25rem; margin-top: 0; }
 .escaner-camara { position: relative; aspect-ratio: 1; margin-top: 8px; background: #000; border-radius: 16px; overflow: hidden; }

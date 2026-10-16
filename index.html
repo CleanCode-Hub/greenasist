@@ -502,6 +502,7 @@
       </div>
       <div class="acciones lista-botones">
         <button type="button" class="secundario" id="lista-qr">📱 QR</button>
+        <button type="button" class="secundario" id="lista-pdf">📄 PDF</button>
         <button type="button" class="secundario" data-cerrar>Cerrar</button>
       </div>
     </div>
@@ -661,6 +662,9 @@
   <!-- ================================================================
        SCRIPTS (el orden importa: sesion.js va al final)
        ================================================================ -->
+  <!-- Reporte de asistencia: solo se ve al imprimir / guardar como PDF -->
+  <div id="reporte"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/conexion.js"></script>
