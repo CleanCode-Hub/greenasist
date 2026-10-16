@@ -14,7 +14,7 @@ window.PORTAL_CONFIG = {
   // Link público del portal (cuando se publique, ej. GitHub Pages).
   // El QR de llegada abre este link en el celular del jugador.
   // Si se deja vacío, se usa la dirección desde donde se abrió la página.
-  urlPublica: '',
+  urlPublica: 'https://cleancode-hub.github.io/greenasist/',
 
   // Contraseña temporal que se pone por defecto al crear una cuenta o al
   // restablecerla. Al entrar por primera vez, el portal obliga a cambiarla.

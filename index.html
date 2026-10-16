@@ -292,6 +292,7 @@
 
       <!-- 🏠 Inicio: categoría (o avance de recluta) y resumen -->
       <div class="vista" data-jvista="inicio">
+        <button type="button" class="primario enorme ancho boton-escanear" id="btn-escanear">📷 Escanear QR de llegada</button>
         <div class="aviso-cancelacion" id="aviso-proximos" role="status" hidden></div>
         <div class="categoria-jugador" id="mi-categoria" data-no-pits hidden></div>
         <div class="avance-recluta" id="mi-recluta" hidden></div>
@@ -533,6 +534,19 @@
   </dialog>
 
   <!-- Resultado de escanear el QR (lo ve el jugador) -->
+  <!-- Jugador: escanear el QR de llegada con la cámara, dentro del portal -->
+  <dialog id="dialogo-escaner" aria-labelledby="escaner-titulo">
+    <div class="dialogo-titulo">
+      <h2 id="escaner-titulo">📷 Escanea el QR</h2>
+      <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+    </div>
+    <div class="escaner-camara">
+      <video id="escaner-video" playsinline muted></video>
+      <span class="escaner-marco" aria-hidden="true"></span>
+    </div>
+    <p class="escaner-estado" id="escaner-estado" role="status"></p>
+  </dialog>
+
   <dialog id="dialogo-llegada" aria-labelledby="llegada-titulo">
     <div class="llegada">
       <div class="llegada-icono" id="llegada-icono" aria-hidden="true"></div>

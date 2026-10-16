@@ -84,6 +84,7 @@
       conHistorial;
   }
   selectorAnio.addEventListener('change', cargar);
+  Portal.recargarJugador = () => cargar();   // después de registrar la llegada con el QR
 
   async function cargar() {
     try {

@@ -315,6 +315,13 @@ button.cal-dia:hover { border-color: var(--vivo); }
 .llegada-icono { width: 110px; height: 110px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; font-size: 4rem; font-weight: 800; color: #fff; }
 .llegada-icono.bien { background: var(--verde); }
 .llegada-icono.mal { background: var(--rojo); }
+/* Botón y ventana para escanear el QR desde el portal */
+.boton-escanear { min-height: 64px; font-size: 1.25rem; margin-top: 0; }
+.escaner-camara { position: relative; aspect-ratio: 1; margin-top: 8px; background: #000; border-radius: 16px; overflow: hidden; }
+.escaner-camara video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.escaner-marco { position: absolute; inset: 14%; border: 4px solid #fff; border-radius: 20px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none; }
+.escaner-estado { margin: 14px 0 0; font-size: 1.1rem; font-weight: 600; text-align: center; }
+.escaner-estado.mal { color: var(--rojo); font-weight: 500; text-align: left; }
 
 /* --- 17c. Torneos (asistencia extra) · color morado ------------------- */
 :root { --torneo: #6b2fb3; --torneo-fondo: #f1e8ff; }
