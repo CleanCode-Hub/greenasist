@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="es" data-estado="cargando">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Green Devils · Portal de jugadores</title>
+  <meta name="theme-color" content="#002e00">
+  <link rel="icon" href="img/icono-192.png">
+  <!-- Para "Agregar a pantalla de inicio" en el celular (se abre como app) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="img/icono-apple-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Green Devils">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+
+  <!-- Pantalla de carga mientras se revisa si ya hay sesión -->
+  <section id="cargando" role="status" aria-live="polite">
+    <img class="logo carga" src="img/logo.jpg" alt="">
+    <div class="spinner" aria-hidden="true"></div>
+    <strong>Green Devils</strong>
+    <span id="cargando-mensaje">Revisando tu sesión…</span>
+  </section>
+
+  <!-- ================================================================
+       INICIO DE SESIÓN
+       ================================================================ -->
+  <section class="login" id="login" aria-labelledby="login-titulo">
+    <form class="login-tarjeta" id="login-form">
+      <img class="logo" src="img/logo.jpg" alt="Logotipo de Green Devils">
+      <p class="eyebrow">Paintball · Portal de jugadores</p>
+      <h1 id="login-titulo">Green Devils</h1>
+      <p>Ingresa con el usuario que te dio el administrador.</p>
+      <p class="aviso-llegada" id="login-llegada" hidden>📱 Inicia sesión y tu llegada al entrenamiento se registrará sola.</p>
+      <label>Usuario
+        <input type="text" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="100">
+      </label>
+      <label>Contraseña
+        <input type="password" name="contrasena" autocomplete="current-password" required maxlength="128">
+      </label>
+      <p class="error oculto" id="login-error" role="alert"></p>
+      <button class="primario ancho">Ingresar</button>
+      <p class="nota">¿Olvidaste tu contraseña? Pide al administrador una contraseña temporal.</p>
+    </form>
+  </section>
+
+  <!-- ================================================================
+       PORTAL (después de iniciar sesión)
+       ================================================================ -->
+  <main id="portal" hidden>
+    <header class="encabezado">
+      <div class="marca">
+        <img class="logo chico" src="img/logo.jpg" alt="">
+        <div>
+          <h1>Green Devils</h1>
+          <p id="bienvenida"></p>
+        </div>
+      </div>
+      <div class="acciones">
+        <button class="secundario campana" id="btn-avisos" type="button" aria-label="Avisos" hidden>🔔<span class="globo" hidden></span></button>
+        <button class="secundario" id="btn-mi-contrasena" type="button">Cambiar contraseña</button>
+        <button class="secundario" id="btn-salir" type="button">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <!-- Coach: cambiar entre su panel y las estadísticas del equipo -->
+    <nav class="pestanas nav-coach" id="nav-coach" role="tablist" aria-label="Coach" hidden>
+      <button type="button" role="tab" data-coach="jugador" class="activa" aria-selected="true">👤 Mi panel</button>
+      <button type="button" role="tab" data-coach="equipo" aria-selected="false">📊 Estadísticas del equipo</button>
+    </nav>
+
+    <!-- ============================================================
+         PANEL DEL ADMINISTRADOR
+         ============================================================ -->
+    <section id="panel-admin" hidden>
+      <nav class="pestanas" role="tablist" aria-label="Panel del administrador">
+        <button type="button" role="tab" data-pestana="hoy" class="activa" aria-selected="true">📋 Hoy</button>
+        <button type="button" role="tab" data-pestana="entrenamientos" aria-selected="false">📅 Entrenamientos</button>
+        <button type="button" role="tab" data-pestana="green-card" aria-selected="false">💵 Green Card</button>
+        <button type="button" role="tab" data-pestana="roster" aria-selected="false">👥 Roster</button>
+        <button type="button" role="tab" data-pestana="reclutas" aria-selected="false">🔰 Reclutas</button>
+        <button type="button" role="tab" data-pestana="estadisticas" aria-selected="false">📊 Estadísticas</button>
+        <button type="button" role="tab" data-pestana="cuentas" aria-selected="false">👤 Cuentas</button>
+        <label class="selector-anio">Año <select id="anio-admin"></select></label>
+      </nav>
+
+      <!-- Pestaña: Hoy (lo que se usa en el campo: pasar lista o cancelar) -->
+      <div class="vista" data-vista="hoy">
+        <div class="tarjeta hoy" id="hoy-principal"></div>
+        <div class="tarjeta">
+          <h2>Listas pendientes</h2>
+          <p class="nota">Entrenamientos que ya pasaron y todavía no tienen lista.</p>
+          <ul class="lista lista-pendientes" id="hoy-pendientes"></ul>
+        </div>
+      </div>
+
+      <!-- Pestaña: Reclutas (meta de 50% de asistencia por tetramestre) -->
+      <div class="vista" data-vista="reclutas" hidden>
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">
+            <h2>🔰 Reclutas</h2>
+            <button class="primario" id="btn-nuevo-recluta" type="button">+ Nuevo recluta</button>
+          </div>
+          <p class="nota">Para subir a jugador, el recluta necesita <strong>50% de asistencia en un tetramestre ya terminado</strong> (contando desde su fecha de alta). Si no lo logra, se evalúa en el siguiente.</p>
+          <div class="metricas" id="reclutas-resumen"></div>
+        </div>
+        <div class="reclutas" id="reclutas-lista"></div>
+      </div>
+
+      <!-- Pestaña: Roster (jugadores por categoría del torneo) -->
+      <div class="vista" data-vista="roster" hidden>
+        <div class="tarjeta">
+          <h2>👥 Roster por categoría</h2>
+          <p class="nota">Divisiones del torneo. Cada jugador juega en una categoría a la vez; para subirlo de división usa <strong>Cambiar</strong>.</p>
+          <div class="metricas" id="roster-resumen"></div>
+        </div>
+        <div class="roster" id="roster-categorias"></div>
+      </div>
+
+      <!-- Pestaña: Cuentas -->
+      <div class="vista" data-vista="cuentas" hidden>
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">
+            <h2>Cuentas</h2>
+            <button class="primario" id="btn-nueva-cuenta" type="button">+ Nueva cuenta</button>
+          </div>
+          <div class="filtros">
+            <input type="search" id="buscar" placeholder="Buscar por nombre o usuario" aria-label="Buscar">
+            <select id="filtro-rol" aria-label="Filtrar por rol">
+              <option value="">Todos los roles</option>
+              <option value="jugador">Jugadores</option>
+              <option value="coach">Coaches</option>
+              <option value="pits">Pits</option>
+              <option value="recluta">Reclutas</option>
+              <option value="admin">Administradores</option>
+            </select>
+            <label class="casilla"><input type="checkbox" id="ver-inactivos"> Ver inactivos</label>
+          </div>
+          <div class="tabla-contenedor">
+            <table class="tabla apilable">
+              <thead>
+                <tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Alta</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody id="lista-cuentas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña: Entrenamientos -->
+      <div class="vista" data-vista="entrenamientos" hidden>
+        <div class="tarjeta" id="admin-calendario">
+          <div class="tarjeta-titulo">
+            <h2>Calendario</h2>
+            <div class="cal-nav">
+              <button type="button" class="secundario" data-cal-anterior aria-label="Mes anterior">‹</button>
+              <strong data-cal-titulo></strong>
+              <button type="button" class="secundario" data-cal-siguiente aria-label="Mes siguiente">›</button>
+            </div>
+          </div>
+          <p class="nota">Toca un día para poner entrenamiento o torneo, cancelarlo o pasar lista.</p>
+          <div class="calendario" id="admin-cal-dias"></div>
+          <p class="leyenda">
+            <span class="punto programado"></span> Programado
+            <span class="punto con-lista"></span> Lista tomada
+            <span class="punto pendiente"></span> Sin lista
+            <span class="punto torneo"></span> Torneo
+            <span class="punto cancelado"></span> Cancelado
+          </p>
+        </div>
+        <form class="tarjeta" id="form-sabados">
+          <h2>Agregar todos los sábados de un mes</h2>
+          <div class="con-boton">
+            <label>Mes<input type="month" name="mes" required></label>
+            <button class="primario">Agregar sábados</button>
+          </div>
+          <p class="nota">Crea un entrenamiento por cada sábado del mes. Los domingos se programan tocándolos en el calendario.</p>
+        </form>
+        <div class="tarjeta">
+          <h2>Entrenamientos y torneos del año</h2>
+          <div id="lista-entrenamientos"></div>
+        </div>
+      </div>
+
+      <!-- Pestaña: Green Card -->
+      <div class="vista" data-vista="green-card" hidden>
+        <div class="metricas" id="gc-metricas"></div>
+        <div class="tarjeta" id="gc-tarjeta">
+          <div class="tarjeta-titulo">
+            <h2>Green Card</h2>
+            <div class="interruptor" role="group" aria-label="Ver pagos">
+              <button type="button" data-gc-vista="mes" aria-pressed="false">Por mes</button>
+              <button type="button" data-gc-vista="anio" aria-pressed="false">Todo el año</button>
+            </div>
+          </div>
+          <p class="nota">Membresía mensual: <strong id="gc-monto"></strong>.</p>
+
+          <!-- Vista por mes (la más cómoda en el celular) -->
+          <div id="gc-vista-mes">
+            <div class="cal-nav">
+              <button type="button" class="secundario" data-cal-anterior aria-label="Mes anterior">‹</button>
+              <strong data-cal-titulo></strong>
+              <button type="button" class="secundario" data-cal-siguiente aria-label="Mes siguiente">›</button>
+            </div>
+            <p class="gc-resumen-mes" id="gc-resumen-mes"></p>
+            <ul class="lista-pagos" id="gc-lista-mes"></ul>
+          </div>
+
+          <!-- Vista de todo el año (tabla jugador × mes) -->
+          <div id="gc-vista-anio">
+            <p class="nota">Toca un mes para registrar el pago o ver su detalle.</p>
+            <p class="leyenda">
+              <span class="celda pagado">✓</span> Pagado
+              <span class="celda debe">Debe</span> Pendiente
+              <span class="celda proximo">·</span> Mes futuro
+              <span class="celda no-aplica">—</span> Antes de su alta
+            </p>
+            <div class="tabla-contenedor">
+              <table class="tabla matriz">
+                <thead id="gc-cabecera"></thead>
+                <tbody id="gc-cuerpo"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña: Estadísticas -->
+      <div class="vista" data-vista="estadisticas" hidden>
+        <nav class="subpestanas" id="est-roles" role="tablist" aria-label="Estadísticas por rol"></nav>
+        <p class="aviso-coach" id="aviso-coach" hidden></p>
+        <div class="metricas" id="est-metricas"></div>
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">
+            <h2 id="est-titulo-tabla">Asistencia</h2>
+            <div class="interruptor" role="group" aria-label="Ver asistencia">
+              <button type="button" class="activa" aria-pressed="true" data-est-vista="tetra">Por tetramestre</button>
+              <button type="button" aria-pressed="false" data-est-vista="mes">Por mes</button>
+            </div>
+          </div>
+          <p class="nota">Porcentaje = asistencias ÷ (asistencias + faltas). Las justificadas y los días cancelados no cuentan. Toca un nombre para ver su detalle.</p>
+          <label class="filtro-categoria">Categoría
+            <select id="est-categoria"><option value="">Todas las categorías</option></select>
+          </label>
+          <div class="tabla-contenedor">
+            <table class="tabla matriz">
+              <thead id="est-cabecera"></thead>
+              <tbody id="est-cuerpo"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tarjeta">
+          <h2>🎯 Asistencia por categoría</h2>
+          <p class="nota">Cada entrenamiento y torneo cuenta en la categoría que tenía el jugador <strong>ese día</strong>. Si alguien subió a mitad de año, lo de antes cuenta en su categoría anterior.</p>
+          <div class="tabla-contenedor">
+            <table class="tabla matriz">
+              <thead id="est-cat-cabecera"></thead>
+              <tbody id="est-cat-cuerpo"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tarjeta">
+          <h2>🏆 Asistencia a torneos</h2>
+          <p class="nota">Ir a un torneo es <strong>asistencia extra</strong>: suma, pero faltar no cuenta en contra.</p>
+          <ul class="lista" id="est-torneos"></ul>
+        </div>
+        <div class="tarjeta" id="est-detalle">
+          <div class="tarjeta-titulo">
+            <h2>Detalle individual</h2>
+            <select id="est-jugador" class="selector-jugador" aria-label="Jugador"></select>
+          </div>
+          <div id="est-detalle-contenido"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PANEL DEL JUGADOR
+         ============================================================ -->
+    <section id="panel-jugador" class="vista" hidden>
+      <!-- Pestañas del panel (en el celular: cuadrícula de 2 × 2) -->
+      <nav class="pestanas" id="jugador-pestanas" role="tablist" aria-label="Mi panel">
+        <button type="button" role="tab" data-jpestana="inicio" class="activa" aria-selected="true">🏠 Inicio</button>
+        <button type="button" role="tab" data-jpestana="calendario" aria-selected="false">📅 Calendario</button>
+        <button type="button" role="tab" data-jpestana="asistencia" aria-selected="false">📊 Asistencia</button>
+        <button type="button" role="tab" data-jpestana="green-card" aria-selected="false" data-no-pits>💵 Green Card</button>
+        <label class="selector-anio">Año <select id="anio-jugador"></select></label>
+      </nav>
+
+      <!-- 🏠 Inicio: categoría (o avance de recluta) y resumen -->
+      <div class="vista" data-jvista="inicio">
+        <div class="aviso-cancelacion" id="aviso-proximos" role="status" hidden></div>
+        <div class="categoria-jugador" id="mi-categoria" data-no-pits hidden></div>
+        <div class="avance-recluta" id="mi-recluta" hidden></div>
+        <div class="metricas" id="jugador-metricas"></div>
+      </div>
+
+      <!-- 📅 Calendario: el mes y la lista de entrenamientos y torneos -->
+      <div class="vista" data-jvista="calendario" hidden>
+        <div class="tarjeta" id="jugador-calendario">
+          <div class="tarjeta-titulo">
+            <h2>Mi calendario</h2>
+            <div class="cal-nav">
+              <button type="button" class="secundario" data-cal-anterior aria-label="Mes anterior">‹</button>
+              <strong data-cal-titulo></strong>
+              <button type="button" class="secundario" data-cal-siguiente aria-label="Mes siguiente">›</button>
+            </div>
+          </div>
+          <div class="calendario" id="jugador-cal-dias"></div>
+          <p class="leyenda">
+            <span class="punto asistio"></span> Asistí
+            <span class="punto falta"></span> Falté
+            <span class="punto justificada"></span> Justificada
+            <span class="punto torneo"></span> Torneo
+            <span class="punto cancelado"></span> Cancelado
+            <span class="punto programado"></span> Próximo
+          </p>
+        </div>
+        <div class="tarjeta">
+          <h2>Entrenamientos y torneos</h2>
+          <ul class="lista" id="mis-entrenamientos"></ul>
+        </div>
+      </div>
+
+      <!-- 📊 Asistencia: tetramestres, días que falté y cancelados -->
+      <div class="vista" data-jvista="asistencia" hidden>
+        <div class="metricas" id="jugador-metricas-asistencia"></div>
+        <div class="tarjeta">
+          <h2>Mi asistencia por tetramestre</h2>
+          <div class="tetras en-fila" id="mis-tetras"></div>
+        </div>
+        <div class="rejilla-2">
+          <div class="tarjeta">
+            <h2>Días que falté</h2>
+            <ul class="lista" id="mis-faltas"></ul>
+          </div>
+          <div class="tarjeta">
+            <h2>Entrenamientos cancelados</h2>
+            <ul class="lista" id="mis-cancelados"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 💵 Green Card: los 12 meses -->
+      <div class="vista" data-jvista="green-card" data-no-pits hidden>
+        <div class="tarjeta">
+          <h2>Mi Green Card</h2>
+          <div class="meses" id="mis-pagos"></div>
+          <p class="nota" id="mi-monto"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================================================================
+       VENTANAS
+       ================================================================ -->
+
+  <!-- Nueva cuenta -->
+  <dialog id="dialogo-nueva-cuenta" aria-labelledby="nueva-titulo">
+    <form id="form-nueva-cuenta">
+      <h2 id="nueva-titulo">Nueva cuenta</h2>
+      <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+      <label>Usuario<input name="usuario" required maxlength="100" autocapitalize="none" spellcheck="false" placeholder="Ej. chima, El Chino, Toño 7">
+        <small>Puede llevar espacios, acentos o símbolos. No importan mayúsculas. Con esto inicia sesión.</small>
+      </label>
+      <label>Rol
+        <select name="rol">
+          <option value="jugador">Jugador</option>
+          <option value="coach">Coach</option>
+          <option value="pits">Pits</option>
+          <option value="recluta">Recluta</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </label>
+      <label>Fecha de alta<input name="fechaAlta" type="date" required>
+        <small>Desde ese mes paga Green Card y desde ese día cuenta su asistencia.</small>
+      </label>
+      <label>Contraseña temporal
+        <span class="con-boton">
+          <input name="temporal" required minlength="8" maxlength="72" autocomplete="off">
+          <button type="button" class="secundario" data-generar>🎲 Al azar</button>
+        </span>
+      </label>
+      <p class="nota">Entrégasela personalmente. Deberá cambiarla la primera vez que entre.</p>
+      <p class="error" role="alert"></p>
+      <div class="acciones">
+        <button class="primario" type="submit">Crear cuenta</button>
+        <button class="secundario" type="button" data-cerrar>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Roster: agregar jugadores a una categoría -->
+  <dialog id="dialogo-roster-agregar" aria-labelledby="roster-agregar-titulo">
+    <div class="dialogo-cabecera">
+      <div class="dialogo-titulo">
+        <h2 id="roster-agregar-titulo"></h2>
+        <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+      </div>
+      <input type="search" id="roster-buscar" autofocus placeholder="🔍 Buscar por nombre o usuario" aria-label="Buscar por nombre o usuario">
+    </div>
+    <ul class="lista lista-roster" id="roster-candidatos"></ul>
+    <p class="error" role="alert"></p>
+    <div class="acciones"><button type="button" class="primario grande ancho" data-cerrar>Listo</button></div>
+  </dialog>
+
+  <!-- Roster: quién entrena una categoría (aparte de dónde juega) -->
+  <dialog id="dialogo-roster-coach" aria-labelledby="roster-coach-titulo">
+    <div class="dialogo-cabecera">
+      <div class="dialogo-titulo">
+        <h2 id="roster-coach-titulo"></h2>
+        <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+      </div>
+    </div>
+    <p class="tenue">Toca para poner o quitar. Puede haber más de un coach, y un coach puede entrenar varias categorías aunque juegue en otra.</p>
+    <ul class="lista lista-roster" id="roster-coach-lista"></ul>
+    <p class="error" role="alert"></p>
+    <div class="acciones"><button type="button" class="primario grande ancho" data-cerrar>Listo</button></div>
+  </dialog>
+
+  <!-- Roster: cambiar la categoría de un jugador -->
+  <dialog id="dialogo-roster-jugador" aria-labelledby="roster-jugador-titulo">
+    <h2 id="roster-jugador-titulo"></h2>
+    <label>¿Desde cuándo?<input type="date" id="roster-desde" required>
+      <small>Lo de antes de esta fecha se queda en su categoría anterior.</small>
+    </label>
+    <p class="subtitulo">¿En qué categoría juega?</p>
+    <div class="acciones columna" id="roster-opciones"></div>
+    <p class="error" role="alert"></p>
+    <h3 class="subtitulo">Historial</h3>
+    <ul class="lista" id="roster-historial"></ul>
+    <div class="acciones"><button type="button" class="secundario" data-cerrar>Cerrar</button></div>
+  </dialog>
+
+  <!-- Editar cuenta (corregir nombre, usuario, rol o fecha de alta) -->
+  <dialog id="dialogo-editar-cuenta" aria-labelledby="editar-titulo">
+    <form id="form-editar-cuenta">
+      <h2 id="editar-titulo">✏️ Editar cuenta</h2>
+      <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+      <label>Usuario<input name="usuario" required maxlength="100" autocapitalize="none" spellcheck="false">
+        <small id="editar-aviso-usuario">Si lo cambias, la persona deberá entrar con el usuario nuevo. Su contraseña no cambia.</small>
+      </label>
+      <label>Rol
+        <select name="rol">
+          <option value="jugador">Jugador</option>
+          <option value="coach">Coach</option>
+          <option value="pits">Pits</option>
+          <option value="recluta">Recluta</option>
+          <option value="admin">Administrador</option>
+        </select>
+        <small id="editar-aviso-rol" hidden>No puedes cambiar tu propio rol.</small>
+      </label>
+      <label>Fecha de alta<input name="fechaAlta" type="date" required>
+        <small>Desde ese mes paga Green Card y desde ese día cuenta su asistencia.</small>
+      </label>
+      <p class="error" role="alert"></p>
+      <div class="acciones">
+        <button class="primario" type="submit">Guardar cambios</button>
+        <button class="secundario" type="button" data-cerrar>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Contraseña (cambiar propia / temporal obligatoria / restablecer otra) -->
+  <dialog id="dialogo-contrasena" aria-labelledby="contrasena-titulo">
+    <form id="form-contrasena">
+      <h2 id="contrasena-titulo"></h2>
+      <p id="contrasena-texto"></p>
+      <label id="campo-actual">Contraseña actual o temporal
+        <input name="actual" type="password" autocomplete="current-password" maxlength="128">
+      </label>
+      <label><span id="etiqueta-nueva">Nueva contraseña</span>
+        <span class="con-boton">
+          <input name="nueva" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+          <button type="button" class="secundario" data-generar hidden>🎲 Al azar</button>
+        </span>
+      </label>
+      <label>Confirmar contraseña
+        <input name="confirmar" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+      </label>
+      <p class="nota">Mínimo 8 caracteres.</p>
+      <p class="error" role="alert"></p>
+      <div class="acciones">
+        <button class="primario" type="submit">Guardar contraseña</button>
+        <button class="secundario" type="button" data-cerrar>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Pasar lista de un entrenamiento -->
+  <!-- Pasar lista: tocar el nombre de quien llegó. Se guarda con cada toque. -->
+  <dialog id="dialogo-lista" aria-labelledby="lista-titulo">
+    <div class="lista-encabezado">
+      <div>
+        <h2 id="lista-titulo">Pasar lista</h2>
+        <p class="contador" id="lista-contador" aria-live="polite"></p>
+      </div>
+      <div class="acciones lista-botones">
+        <button type="button" class="secundario" id="lista-qr">📱 QR</button>
+        <button type="button" class="secundario" data-cerrar>Cerrar</button>
+      </div>
+    </div>
+    <div class="lista-buscar">
+      <input type="search" id="lista-buscar" placeholder="🔍 Buscar por nombre o usuario" aria-label="Buscar por nombre o usuario">
+      <p class="nota"><strong>Toca el nombre de cada jugador que llegó.</strong> Se guarda solo. Si te equivocas, tócalo otra vez.</p>
+      <p class="error" id="lista-error" role="alert"></p>
+    </div>
+    <ul class="lista-asistencia" id="lista-jugadores"></ul>
+    <div class="lista-pie">
+      <button type="button" class="primario grande" id="lista-terminar">✔ Terminar lista</button>
+    </div>
+  </dialog>
+
+  <!-- QR de llegada (lo muestra el admin; los jugadores lo escanean) -->
+  <dialog id="dialogo-qr" aria-labelledby="qr-titulo">
+    <div class="qr-pantalla">
+      <h2 id="qr-titulo">Escanea con la cámara de tu celular</h2>
+      <p class="qr-fecha" id="qr-fecha"></p>
+      <div class="qr-imagen" id="qr-imagen" role="img" aria-label="Código QR para registrar la llegada"></div>
+      <p class="nota" id="qr-nota">El código cambia cada 30 segundos.</p>
+      <p class="contador" id="qr-contador" aria-live="polite"></p>
+      <p class="qr-nombres" id="qr-nombres"></p>
+      <p class="error" id="qr-error" role="alert"></p>
+      <div class="acciones">
+        <button type="button" class="secundario grande" id="qr-a-lista">📋 Ver lista</button>
+        <button type="button" class="primario grande" data-cerrar>Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Resultado de escanear el QR (lo ve el jugador) -->
+  <dialog id="dialogo-llegada" aria-labelledby="llegada-titulo">
+    <div class="llegada">
+      <div class="llegada-icono" id="llegada-icono" aria-hidden="true"></div>
+      <h2 id="llegada-titulo"></h2>
+      <p id="llegada-texto"></p>
+      <button type="button" class="primario enorme ancho" data-cerrar>Listo</button>
+    </div>
+  </dialog>
+
+  <!-- Día del calendario: programar, cancelar, reactivar, pasar lista o eliminar -->
+  <dialog id="dialogo-dia" aria-labelledby="dia-titulo">
+    <form id="form-dia">
+      <h2 id="dia-titulo"></h2>
+      <p id="dia-estado"></p>
+
+      <!-- Paso 1: el día es obligatorio (hay entrenamiento) o se cancela -->
+      <div id="dia-opciones" class="acciones columna">
+        <button type="button" class="primario grande" data-dia="programar" id="dia-btn-programar">✅ Hay entrenamiento (obligatorio)</button>
+        <button type="button" class="secundario grande boton-torneo" data-dia="mostrar-torneo" id="dia-btn-torneo">🏆 Torneo (asistencia extra)</button>
+        <button type="button" class="secundario grande boton-torneo" data-dia="mostrar-torneo" id="dia-btn-editar-torneo">✏️ Cambiar nombre o días del torneo</button>
+        <button type="button" class="primario grande" data-dia="lista" id="dia-btn-lista">📋 Pasar lista</button>
+        <button type="button" class="secundario grande peligro" data-dia="mostrar-cancelar" id="dia-btn-cancelado">❌ Cancelado</button>
+      </div>
+
+      <!-- Paso 2 (solo si es torneo): el nombre es opcional -->
+      <fieldset id="dia-torneo" class="caja" hidden>
+        <legend>🏆 Torneo</legend>
+        <p class="nota">Ir a un torneo cuenta como <strong>asistencia extra</strong>: suma, pero faltar no cuenta en contra.</p>
+        <label>Nombre del torneo (opcional)<input name="torneo" maxlength="120" placeholder="Ej. Copa Monterrey"></label>
+        <label>¿Cuántos días dura?
+          <select name="dias">
+            <option value="1">1 día</option>
+            <option value="2">2 días</option>
+            <option value="3">3 días</option>
+          </select>
+          <small id="torneo-dias-texto"></small>
+        </label>
+        <p class="nota">Aunque dure varios días, es <strong>un solo torneo</strong>: una lista y una asistencia extra, sin importar qué día jugó cada categoría.</p>
+        <div class="acciones columna">
+          <button type="button" class="primario grande" data-dia="torneo">Confirmar torneo</button>
+          <button type="button" class="secundario" data-dia="volver">Volver</button>
+        </div>
+      </fieldset>
+
+      <!-- Paso 2 (solo si se cancela): el motivo es opcional -->
+      <fieldset id="dia-cancelar" class="caja" hidden>
+        <legend>❌ Cancelar este día</legend>
+        <label>Motivo (opcional)
+          <select name="motivo">
+            <option value="">Sin especificar</option>
+            <option>Lluvia</option>
+            <option>Mal clima</option>
+            <option>Campo no disponible</option>
+            <option>Torneo o evento</option>
+            <option>Otro</option>
+          </select>
+        </label>
+        <label>Detalle (opcional)<input name="detalle" maxlength="150" placeholder="Ej. se inundó el campo"></label>
+        <div class="acciones columna">
+          <button type="button" class="primario grande fondo-rojo" data-dia="cancelar">Confirmar: cancelado</button>
+          <button type="button" class="secundario" data-dia="volver">Volver</button>
+        </div>
+      </fieldset>
+
+      <!-- Si ya estaba cancelado -->
+      <div id="dia-reactivar" class="acciones columna">
+        <button type="button" class="primario grande" data-dia="reactivar">✅ Siempre sí hay entrenamiento</button>
+      </div>
+
+      <p class="error" role="alert"></p>
+      <div class="acciones pie">
+        <button type="button" class="secundario peligro" data-dia="eliminar" id="dia-eliminar">Eliminar del calendario</button>
+        <button type="button" class="secundario" data-cerrar>Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 🔔 Avisos (cancelaciones, torneos, días reactivados) -->
+  <dialog id="dialogo-avisos" aria-labelledby="avisos-titulo">
+    <h2 id="avisos-titulo">🔔 Avisos</h2>
+    <ul class="lista lista-avisos" id="lista-avisos"></ul>
+    <div class="acciones"><button type="button" class="primario grande ancho" data-cerrar>Entendido</button></div>
+  </dialog>
+
+  <!-- Pago de Green Card -->
+  <dialog id="dialogo-pago" aria-labelledby="pago-titulo">
+    <form id="form-pago">
+      <h2 id="pago-titulo">Registrar pago</h2>
+      <p id="pago-texto"></p>
+      <fieldset id="pago-campos" class="sin-borde">
+        <label>Monto<input name="monto" type="number" min="1" step="1" required></label>
+        <label>Fecha de pago<input name="fecha_pago" type="date" required></label>
+        <label>Método
+          <select name="metodo">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="otro">Otro</option>
+          </select>
+        </label>
+        <label>Nota (opcional)<input name="nota" maxlength="200"></label>
+      </fieldset>
+      <dl class="datos" id="pago-detalle" hidden></dl>
+      <p class="error" role="alert"></p>
+      <div class="acciones">
+        <button class="primario" type="submit" id="pago-guardar">Registrar pago</button>
+        <button class="secundario peligro" type="button" id="pago-eliminar" hidden>Eliminar pago</button>
+        <button class="secundario" type="button" data-cerrar>Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ================================================================
+       SCRIPTS (el orden importa: sesion.js va al final)
+       ================================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/conexion.js"></script>
+  <script src="js/club.js"></script>
+  <script src="js/contrasena.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/admin-cuentas.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="js/llegada.js"></script>
+  <script src="js/admin-lista.js"></script>
+  <script src="js/admin-qr.js"></script>
+  <script src="js/admin-hoy.js"></script>
+  <script src="js/admin-entrenamientos.js"></script>
+  <script src="js/admin-calendario.js"></script>
+  <script src="js/admin-green-card.js"></script>
+  <script src="js/admin-roster.js"></script>
+  <script src="js/admin-reclutas.js"></script>
+  <script src="js/admin-estadisticas.js"></script>
+  <script src="js/avisos.js"></script>
+  <script src="js/jugador.js"></script>
+  <script src="js/coach.js"></script>
+  <script src="js/sesion.js"></script>
+</body>
+</html>
