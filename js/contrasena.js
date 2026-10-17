@@ -46,8 +46,8 @@
 
   // Muestra u oculta lo escrito en los campos de contraseña nueva.
   function mostrarCampos(visible) {
-    form.elements.nueva.type = visible ? 'text' : 'password';
-    form.elements.confirmar.type = visible ? 'text' : 'password';
+    Portal.verContrasena(form.elements.nueva, visible);   // también cambia el 👁️ / 🙈
+    Portal.verContrasena(form.elements.confirmar, visible);
   }
 
   botonGenerar.addEventListener('click', () => {

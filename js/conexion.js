@@ -69,6 +69,30 @@ Portal.generarTemporal = function () {
   return `${texto.slice(0, 4)}-${texto.slice(4)}`;
 };
 
+// 👁️ Ver u ocultar lo escrito en un campo de contraseña.
+Portal.verContrasena = function (input, visible) {
+  input.type = visible ? 'text' : 'password';
+  const boton = input.parentElement.querySelector('.ver-contrasena');
+  if (!boton) return;
+  boton.textContent = visible ? '🙈' : '👁️';
+  boton.setAttribute('aria-label', visible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  boton.setAttribute('aria-pressed', String(visible));
+};
+// Cada campo de contraseña de la página recibe su botón 👁️ a la derecha.
+// Al limpiar el formulario se vuelve a ocultar.
+document.querySelectorAll('input[type="password"]').forEach(input => {
+  const caja = document.createElement('span');
+  caja.className = 'campo-contrasena';
+  input.replaceWith(caja);
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'ver-contrasena';
+  caja.append(input, boton);
+  Portal.verContrasena(input, false);
+  boton.addEventListener('click', () => Portal.verContrasena(input, input.type === 'password'));
+  input.form?.addEventListener('reset', () => Portal.verContrasena(input, false));
+});
+
 // Botón ✕ (data-cerrar-x) de cualquier ventana: la cierra.
 document.addEventListener('click', e => {
   if (e.target.closest('[data-cerrar-x]')) e.target.closest('dialog')?.close();
