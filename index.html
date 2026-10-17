@@ -97,14 +97,14 @@
         </div>
       </div>
 
-      <!-- Pestaña: Reclutas (meta de 50% de asistencia por tetramestre) -->
+      <!-- Pestaña: Reclutas (meta de 50% de asistencia por periodo) -->
       <div class="vista" data-vista="reclutas" hidden>
         <div class="tarjeta">
           <div class="tarjeta-titulo">
             <h2>🔰 Reclutas</h2>
             <button class="primario" id="btn-nuevo-recluta" type="button">+ Nuevo recluta</button>
           </div>
-          <p class="nota">Para subir a jugador, el recluta necesita <strong>50% de asistencia en un tetramestre ya terminado</strong> (contando desde su fecha de alta). Si no lo logra, se evalúa en el siguiente.</p>
+          <p class="nota">Para subir a jugador, el recluta necesita <strong>50% de asistencia en un periodo ya terminado</strong> (contando desde su fecha de alta). Si no lo logra, se evalúa en el siguiente.</p>
           <div class="metricas" id="reclutas-resumen"></div>
         </div>
         <div class="reclutas" id="reclutas-lista"></div>
@@ -239,7 +239,7 @@
           <div class="tarjeta-titulo">
             <h2 id="est-titulo-tabla">Asistencia</h2>
             <div class="interruptor" role="group" aria-label="Ver asistencia">
-              <button type="button" class="activa" aria-pressed="true" data-est-vista="tetra">Por tetramestre</button>
+              <button type="button" class="activa" aria-pressed="true" data-est-vista="tetra">Por periodo</button>
               <button type="button" aria-pressed="false" data-est-vista="mes">Por mes</button>
             </div>
           </div>
@@ -295,6 +295,8 @@
       <!-- 🏠 Inicio: categoría (o avance de recluta) y resumen -->
       <div class="vista" data-jvista="inicio">
         <button type="button" class="primario enorme ancho boton-escanear" id="btn-escanear">📷 Escanear QR de llegada</button>
+        <p class="aviso-pago-qr" id="aviso-pago-qr" role="status" hidden></p>
+        <div class="tarjeta-comision" id="mi-comision" hidden></div>
         <div class="aviso-cancelacion" id="aviso-proximos" role="status" hidden></div>
         <div class="categoria-jugador" id="mi-categoria" data-no-pits hidden></div>
         <div class="avance-recluta" id="mi-recluta" hidden></div>
@@ -328,11 +330,11 @@
         </div>
       </div>
 
-      <!-- 📊 Asistencia: tetramestres, días que falté y cancelados -->
+      <!-- 📊 Asistencia: periodos, días que falté y cancelados -->
       <div class="vista" data-jvista="asistencia" hidden>
         <div class="metricas" id="jugador-metricas-asistencia"></div>
         <div class="tarjeta">
-          <h2>Mi asistencia por tetramestre</h2>
+          <h2>Mi asistencia por periodo</h2>
           <div class="tetras en-fila" id="mis-tetras"></div>
         </div>
         <div class="rejilla-2">
@@ -547,6 +549,31 @@
   </dialog>
 
   <!-- Resultado de escanear el QR (lo ve el jugador) -->
+  <!-- Comisionado (Pits): mostrar el QR y VER la lista, sin poder cambiarla -->
+  <dialog id="dialogo-comisionado" aria-labelledby="com-titulo">
+    <div class="dialogo-cabecera">
+      <div class="dialogo-titulo">
+        <h2 id="com-titulo">👤 Comisionado</h2>
+        <button type="button" class="cerrar-x" data-cerrar-x aria-label="Cerrar">✕</button>
+      </div>
+      <p class="qr-fecha" id="com-fecha"></p>
+      <div class="subpestanas" role="tablist" aria-label="Comisionado">
+        <button type="button" role="tab" data-com-vista="qr" class="activa" aria-selected="true">📱 QR</button>
+        <button type="button" role="tab" data-com-vista="lista" aria-selected="false">📋 Lista</button>
+      </div>
+      <p class="contador com-contador" id="com-contador" aria-live="polite"></p>
+    </div>
+    <div class="qr-pantalla" data-com="qr">
+      <div class="qr-imagen" id="com-qr" role="img" aria-label="Código QR para registrar la llegada"></div>
+      <p class="nota">El código cambia cada 30 segundos. Que cada quien lo escanee desde su portal.</p>
+    </div>
+    <div data-com="lista" hidden>
+      <p class="nota">Solo puedes ver la lista. Si alguien no pudo escanear, avísale al administrador.</p>
+      <ul class="lista lista-comisionado" id="com-lista"></ul>
+    </div>
+    <p class="error" id="com-error" role="alert"></p>
+  </dialog>
+
   <!-- Jugador: escanear el QR de llegada con la cámara, dentro del portal -->
   <dialog id="dialogo-escaner" aria-labelledby="escaner-titulo">
     <div class="dialogo-titulo">
@@ -577,12 +604,37 @@
 
       <!-- Paso 1: el día es obligatorio (hay entrenamiento) o se cancela -->
       <div id="dia-opciones" class="acciones columna">
-        <button type="button" class="primario grande" data-dia="programar" id="dia-btn-programar">✅ Hay entrenamiento (obligatorio)</button>
+        <button type="button" class="primario grande" data-dia="mostrar-entreno" id="dia-btn-programar">✅ Hay entrenamiento (obligatorio)</button>
+        <button type="button" class="secundario grande" data-dia="mostrar-entreno" id="dia-btn-hora">🕘 Cambiar hora</button>
         <button type="button" class="secundario grande boton-torneo" data-dia="mostrar-torneo" id="dia-btn-torneo">🏆 Torneo (asistencia extra)</button>
         <button type="button" class="secundario grande boton-torneo" data-dia="mostrar-torneo" id="dia-btn-editar-torneo">✏️ Cambiar nombre o días del torneo</button>
         <button type="button" class="primario grande" data-dia="lista" id="dia-btn-lista">📋 Pasar lista</button>
+        <button type="button" class="secundario grande" data-dia="mostrar-comisionado" id="dia-btn-comisionado">👤 Asignar comisionado</button>
         <button type="button" class="secundario grande peligro" data-dia="mostrar-cancelar" id="dia-btn-cancelado">❌ Cancelado</button>
       </div>
+
+      <!-- Paso 2 (entrenamiento): a qué hora empieza (servirá para los retardos) -->
+      <fieldset id="dia-entreno" class="caja" hidden>
+        <legend>✅ Entrenamiento</legend>
+        <label>¿A qué hora empieza?<input name="hora" type="time" required>
+          <small>Se usará más adelante para marcar retardos.</small>
+        </label>
+        <div class="acciones columna">
+          <button type="button" class="primario grande" data-dia="programar" id="dia-confirmar-entreno">Confirmar entrenamiento</button>
+          <button type="button" class="secundario" data-dia="volver">Volver</button>
+        </div>
+      </fieldset>
+
+      <!-- Paso 2 (comisionado): alguien de Pits que va en lugar del admin -->
+      <fieldset id="dia-comisionado" class="caja" hidden>
+        <legend>👤 Comisionado</legend>
+        <p class="nota">Si no vas a poder ir, elige a alguien de <strong>Pits</strong>. Ese día podrá <strong>mostrar el QR</strong> y <strong>ver la lista</strong>, pero no podrá cambiarla.</p>
+        <label>¿Quién va en tu lugar?<select name="comisionado"></select></label>
+        <div class="acciones columna">
+          <button type="button" class="primario grande" data-dia="comisionado">Guardar</button>
+          <button type="button" class="secundario" data-dia="volver">Volver</button>
+        </div>
+      </fieldset>
 
       <!-- Paso 2 (solo si es torneo): el nombre es opcional -->
       <fieldset id="dia-torneo" class="caja" hidden>
@@ -649,8 +701,12 @@
     <form id="form-pago">
       <h2 id="pago-titulo">Registrar pago</h2>
       <p id="pago-texto"></p>
+      <dl class="datos" id="pago-detalle" hidden></dl>
       <fieldset id="pago-campos" class="sin-borde">
-        <label>Monto<input name="monto" type="number" min="1" step="1" required></label>
+        <label>Monto<input name="monto" type="number" min="1" step="1" required>
+          <small>Si paga de más, lo que sobra se abona al mes siguiente.</small>
+        </label>
+        <p class="pago-reparto" id="pago-reparto" role="status" hidden></p>
         <label>Fecha de pago<input name="fecha_pago" type="date" required></label>
         <label>Método
           <select name="metodo">
@@ -661,7 +717,6 @@
         </label>
         <label>Nota (opcional)<input name="nota" maxlength="200"></label>
       </fieldset>
-      <dl class="datos" id="pago-detalle" hidden></dl>
       <p class="error" role="alert"></p>
       <div class="acciones">
         <button class="primario" type="submit" id="pago-guardar">Registrar pago</button>
@@ -697,6 +752,7 @@
   <script src="js/admin-estadisticas.js"></script>
   <script src="js/avisos.js"></script>
   <script src="js/jugador.js"></script>
+  <script src="js/comisionado.js"></script>
   <script src="js/coach.js"></script>
   <script src="js/sesion.js"></script>
 </body>

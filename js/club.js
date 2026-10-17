@@ -1,6 +1,6 @@
 // =====================================================================
 // Reglas del club que usan tanto el administrador como el jugador:
-// fechas, tetramestres, Green Card y porcentajes de asistencia.
+// fechas, periodos, Green Card y porcentajes de asistencia.
 // Todo cálculo vive aquí para que ambos paneles den el mismo resultado.
 // =====================================================================
 (() => {
@@ -12,11 +12,11 @@
     monto: config.monto,
     MESES: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
     MESES_CORTOS: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-    // 3 tetramestres al año
+    // 3 periodos al año
     TETRAS: [
-      { numero: 1, nombre: '1er tetramestre', meses: 'Ene – Abr' },
-      { numero: 2, nombre: '2do tetramestre', meses: 'May – Ago' },
-      { numero: 3, nombre: '3er tetramestre', meses: 'Sep – Dic' }
+      { numero: 1, nombre: '1er periodo', meses: 'Ene – Abr' },
+      { numero: 2, nombre: '2do periodo', meses: 'May – Ago' },
+      { numero: 3, nombre: '3er periodo', meses: 'Sep – Dic' }
     ]
   };
 
@@ -26,7 +26,7 @@
   //   coach   como jugador + puede VER las estadísticas del equipo
   //   pits    staff: se le pasa lista, pero no paga Green Card ni va en el roster
   //   recluta a prueba: paga Green Card y se le pasa lista; no va en el roster.
-  //           Sube a jugador con 50% de asistencia en un tetramestre terminado.
+  //           Sube a jugador con 50% de asistencia en un periodo terminado.
   club.ROLES = { admin: 'Administrador', jugador: 'Jugador', coach: 'Coach', pits: 'Pits', recluta: 'Recluta' };
   club.nombreRol = rol => club.ROLES[rol] || rol;
   club.llevaAsistencia = cuenta => ['jugador', 'coach', 'pits', 'recluta'].includes(cuenta.rol);
@@ -136,6 +136,15 @@
   // "sáb 28 – dom 29 de nov" o "sáb 28 de nov"
   club.rangoCorto = e => club.diasDe(e) > 1 ? `${club.fechaCorta(e.fecha)} – ${club.fechaCorta(club.fechaFin(e))}` : club.fechaCorta(e.fecha);
   club.rangoLargo = e => club.diasDe(e) > 1 ? `${club.fechaLarga(e.fecha)} al ${club.fechaLarga(club.fechaFin(e))}` : club.fechaLarga(e.fecha);
+  // Hora de inicio del entrenamiento (18-hora-entrenamiento.sql): '09:00:00' -> "9:00 a.m."
+  club.horaTexto = hora => hora
+    ? new Date(`2000-01-01T${hora.slice(0, 5)}`).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }) : '';
+  // Versión corta para las casillas del calendario: '16:30:00' -> "4:30 pm"
+  club.horaCorta = hora => {
+    if (!hora) return '';
+    const [h, m] = hora.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+  };
   club.nombreEvento = e => club.esTorneo(e) ? `🏆 ${e.nota || 'Torneo'}` : (e.nota || 'Entrenamiento');
   // periodo.filtro(e) (opcional) decide si cuenta ese día; se usa para "solo cuando estaba en Elite".
   const enPeriodo = (e, periodo) =>
@@ -174,9 +183,9 @@
   };
   club.textoTorneos = t => t.total ? `${t.fue} de ${t.total}` : '—';
 
-  // --- Reclutas: meta de 50% en un tetramestre -----------------------
+  // --- Reclutas: meta de 50% en un periodo -----------------------
   club.META_RECLUTA = 0.5;
-  // Tetramestre n (1-3) de un año, con su rango de fechas.
+  // Periodo n (1-3) de un año, con su rango de fechas.
   club.rangoTetra = (anio, numero) => ({
     anio, numero,
     nombre: `${club.TETRAS[numero - 1].nombre} ${anio}`,
@@ -202,9 +211,9 @@
   };
 
   // Evaluación de un recluta:
-  //   actual   tetramestre en curso: % hasta hoy y cuántos entrenamientos le faltan
-  //   anterior tetramestre que acaba de terminar: ¿cumplió el 50%?
-  //   puedeSubir = cumplió el 50% en el tetramestre anterior (ya terminado)
+  //   actual   periodo en curso: % hasta hoy y cuántos entrenamientos le faltan
+  //   anterior periodo que acaba de terminar: ¿cumplió el 50%?
+  //   puedeSubir = cumplió el 50% en el periodo anterior (ya terminado)
   // Solo cuenta desde su fecha de alta (si entró a mitad, igual puede lograrlo).
   club.evaluarRecluta = (datos, recluta) => {
     const hoy = club.hoy();
@@ -216,7 +225,7 @@
     const actual = evaluar(club.tetraActual());
     const anterior = evaluar(club.tetraAnterior(actual));
 
-    // Entrenamientos que le quedan en el tetramestre (ya programados y sin lista suya).
+    // Entrenamientos que le quedan en el periodo (ya programados y sin lista suya).
     const conRegistro = new Set(datos.asistencias.filter(a => a.jugador_id === recluta.id).map(a => a.entrenamiento_id));
     actual.restantes = datos.entrenamientos.filter(e => !e.cancelado && !club.esTorneo(e) &&
       e.fecha >= hoy && e.fecha <= actual.hasta && e.fecha >= recluta.fecha_alta && !conRegistro.has(e.id)).length;
@@ -231,20 +240,20 @@
       <i class="${(v || 0) >= club.META_RECLUTA ? 'cumple' : ''}" style="width:${Math.round((v || 0) * 100)}%"></i>
       <b style="left:${club.META_RECLUTA * 100}%"></b>
     </span>`;
-  // Texto del avance del tetramestre en curso.
+  // Texto del avance del periodo en curso.
   club.textoAvanceRecluta = a => {
     if (a.necesita === 0) return a.r.asistio
-      ? '✅ Con los entrenamientos programados, ya tiene asegurado el 50% de este tetramestre.'
+      ? '✅ Con los entrenamientos programados, ya tiene asegurado el 50% de este periodo.'
       : 'Todavía no hay entrenamientos con lista.';
-    if (a.alcanzable) return `Para cerrar el tetramestre con 50% necesita ir al menos a ${a.necesita} de los ${a.restantes} entrenamientos que quedan.`;
-    return 'Ya no alcanza el 50% en este tetramestre. Se evalúa en el siguiente.';
+    if (a.alcanzable) return `Para cerrar el periodo con 50% necesita ir al menos a ${a.necesita} de los ${a.restantes} entrenamientos que quedan.`;
+    return 'Ya no alcanza el 50% en este periodo. Se evalúa en el siguiente.';
   };
 
   // Color según el porcentaje (para tablas y calendario).
   club.tonoPorcentaje = v => v == null ? '' : v >= 0.8 ? 'alto' : v >= 0.6 ? 'medio' : 'bajo';
 
-  // Tarjeta de un tetramestre (la usan el detalle del admin y el panel del jugador).
-  // torneos (opcional) = resultado de resumenTorneos para ese tetramestre.
+  // Tarjeta de un periodo (la usan el detalle del admin y el panel del jugador).
+  // torneos (opcional) = resultado de resumenTorneos para ese periodo.
   club.tarjetaTetra = (t, r, actual = false, torneos = null) => `
     <div class="tetra ${actual ? 'actual' : ''}">
       <span>${t.nombre}<small>${t.meses}</small></span>
@@ -289,22 +298,55 @@
   };
 
   // --- Green Card ----------------------------------------------------
+  // Cada mes es una fila en pagos con su cuota (17-abonos.sql). Está pagado
+  // cuando monto >= cuota; si no, es un ABONO (lo que sobró de otro pago).
+  // Antes de instalar 17 no hay cuota: cualquier pago cuenta como completo.
+  const cuotaDe = p => Number(p.cuota ?? p.monto);
+  club.mesCompleto = p => Number(p.monto) >= cuotaDe(p);
+
   // Estado de cada mes del año:
-  //   'pagado'    hay pago registrado
-  //   'debe'      mes ya iniciado (desde su alta) sin pago
-  //   'proximo'   mes futuro sin pago (se puede pagar por adelantado)
+  //   'pagado'    mes completo
+  //   'debe'      mes ya iniciado (desde su alta) sin completar
+  //   'proximo'   mes futuro sin completar (se puede pagar por adelantado)
   //   'no-aplica' antes de su fecha de alta
+  // abono = lo que ya lleva pagado de un mes incompleto · falta = lo que le falta.
   club.estadoMeses = (datos, jugador) => {
     const [altaAnio, altaMes] = jugador.fecha_alta.split('-').map(Number);
     const hoyAnio = club.anioActual(), hoyMes = club.mesActual();
     return club.MESES.map((_, i) => {
       const mes = i + 1;
       const pago = datos.pagos.find(p => p.jugador_id === jugador.id && p.mes === club.mesISO(datos.anio, mes));
-      if (pago) return { mes, estado: 'pagado', pago };
-      if (datos.anio < altaAnio || (datos.anio === altaAnio && mes < altaMes)) return { mes, estado: 'no-aplica' };
-      if (datos.anio < hoyAnio || (datos.anio === hoyAnio && mes <= hoyMes)) return { mes, estado: 'debe' };
-      return { mes, estado: 'proximo' };
+      if (pago && club.mesCompleto(pago)) return { mes, estado: 'pagado', pago };
+      const abono = pago ? { pago, abono: Number(pago.monto), falta: cuotaDe(pago) - Number(pago.monto) } : { falta: club.monto };
+      if (!pago && (datos.anio < altaAnio || (datos.anio === altaAnio && mes < altaMes))) return { mes, estado: 'no-aplica' };
+      if (datos.anio < hoyAnio || (datos.anio === hoyAnio && mes <= hoyMes)) return { mes, estado: 'debe', ...abono };
+      return { mes, estado: 'proximo', ...abono };
     });
   };
   club.mesesQueDebe = meses => meses.filter(m => m.estado === 'debe').length;
+  // Cuánto debe en pesos (descontando abonos).
+  club.adeudo = meses => meses.filter(m => m.estado === 'debe').reduce((suma, m) => suma + m.falta, 0);
+  // ¿Debe la Green Card del mes de esa fecha? Sin el mes COMPLETO no se puede
+  // marcar su llegada (16-asistencia-requiere-pago.sql). Pits no paga: nunca debe.
+  club.debeMesDe = (pagos, cuenta, fecha) =>
+    club.pagaGreenCard(cuenta) && !pagos.some(p => p.jugador_id === cuenta.id && p.mes === `${fecha.slice(0, 7)}-01` && club.mesCompleto(p));
+
+  // Vista previa de cómo se reparte un pago desde un mes (igual que registrar_pago
+  // en 17-abonos.sql): completa ese mes y lo que sobra pasa a los siguientes.
+  // Devuelve [{ anio, mes, monto, completo, falta }].
+  club.repartirPago = (pagos, jugadorId, anio, mes, monto) => {
+    const reparto = [];
+    let resto = monto;
+    for (let vueltas = 0; resto > 0 && vueltas < 36; vueltas++) {
+      const pago = pagos.find(p => p.jugador_id === jugadorId && p.mes === club.mesISO(anio, mes));
+      const lleva = pago ? Number(pago.monto) : 0;
+      const cuota = pago ? cuotaDe(pago) : club.monto;
+      const aplica = Math.max(0, Math.min(resto, cuota - lleva));
+      if (aplica > 0) reparto.push({ anio, mes, monto: aplica, completo: lleva + aplica >= cuota, falta: cuota - lleva - aplica });
+      resto -= aplica;
+      if (++mes > 12) { mes = 1; anio++; }
+    }
+    return reparto;
+  };
+  club.nombreMes = fecha => club.MESES[Number(fecha.slice(5, 7)) - 1].toLowerCase();
 })();

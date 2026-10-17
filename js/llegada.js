@@ -47,6 +47,10 @@
       return;
     }
     const { data, error } = await Portal.nube.rpc('registrar_llegada', { p_codigo: codigo });
+    if (data?.error?.startsWith('No has pagado')) {   // 16-asistencia-requiere-pago.sql
+      mostrar(false, '💵 Green Card pendiente', data.error);
+      return;
+    }
     if (error || !data?.ok) {
       mostrar(false, 'No se pudo registrar', `${data?.error || 'Revisa tu conexión a internet.'} Si sigue sin funcionar, pídele al administrador que te marque en la lista.`);
       return;

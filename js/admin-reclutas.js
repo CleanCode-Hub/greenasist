@@ -1,9 +1,9 @@
 // =====================================================================
 // Pestaña "Reclutas": avance de cada recluta contra la meta de 50%.
-//   - Tetramestre en curso: % hasta hoy y cuántas asistencias le faltan.
-//   - Tetramestre que acaba de terminar: ¿cumplió el 50%?
-//   - "⬆️ Subir a jugador" solo se activa si cumplió en un tetramestre terminado.
-// Usa los datos de HOY (no el año elegido arriba): el tetramestre anterior
+//   - Periodo en curso: % hasta hoy y cuántas asistencias le faltan.
+//   - Periodo que acaba de terminar: ¿cumplió el 50%?
+//   - "⬆️ Subir a jugador" solo se activa si cumplió en un periodo terminado.
+// Usa los datos de HOY (no el año elegido arriba): el periodo anterior
 // puede ser del año pasado. Las reglas están en club.evaluarRecluta.
 // =====================================================================
 (() => {
@@ -37,7 +37,7 @@
     resumen.innerHTML = [
       club.metrica('Reclutas', reclutas.length),
       club.metrica('Pueden subir a jugador', listos, listos ? 'cumplieron el 50%' : '', listos ? 'bien' : ''),
-      club.metrica('Tetramestre en curso', actual.nombre.replace(` ${actual.anio}`, ''), `termina el ${club.fechaLarga(actual.hasta)}`)
+      club.metrica('Periodo en curso', actual.nombre.replace(` ${actual.anio}`, ''), `termina el ${club.fechaLarga(actual.hasta)}`)
     ].join('');
 
     lista.innerHTML = reclutas.length
@@ -57,7 +57,7 @@
       : `<strong class="bajo">❌ No cumplió: ${club.pct(anterior.r.porcentaje)}</strong> <small>(${anterior.r.asistio} de ${anterior.r.asistio + anterior.r.falta})</small>`;
 
     const razon = puedeSubir ? '' : !anterior.participo
-      ? `Entró en este tetramestre: podrá subir cuando termine el ${actual.nombre} si llega al 50%.`
+      ? `Entró en este periodo: podrá subir cuando termine el ${actual.nombre} si llega al 50%.`
       : `No llegó al 50% en el ${anterior.nombre}. Debe lograrlo en el ${actual.nombre}.`;
 
     return `<div class="tarjeta recluta-tarjeta ${puedeSubir ? 'listo' : ''}">

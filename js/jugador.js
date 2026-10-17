@@ -1,5 +1,5 @@
 // =====================================================================
-// Panel del jugador: Green Card, asistencia por tetramestre, calendario
+// Panel del jugador: Green Card, asistencia por periodo, calendario
 // (asistí / falté / cancelado), días que faltó y sus datos.
 // Solo ve lo suyo (lo garantiza RLS).
 // También lo usan:
@@ -91,8 +91,15 @@
       datos = await club.cargarAnio(Number(selectorAnio.value));
       pintarCategoria(datos.anio);
       pintar();
+      // Sin la Green Card del mes pagada, el QR no registra la llegada: se avisa antes.
+      const avisoPago = document.getElementById('aviso-pago-qr');
+      avisoPago.hidden = !(datos.anio === club.anioActual() && club.debeMesDe(datos.pagos, Portal.perfil, club.hoy()));
+      avisoPago.textContent = `💵 No has pagado la Green Card de ${club.nombreMes(club.hoy())}. Hasta que la pagues, el QR no registrará tu llegada.`;
       // 🔔 Avisos: se arman con el calendario del año en curso.
-      if (datos.anio === club.anioActual()) Portal.actualizarAvisos(datos.entrenamientos);
+      if (datos.anio === club.anioActual()) {
+        Portal.actualizarAvisos(datos.entrenamientos);
+        Portal.actualizarComision?.(datos.entrenamientos);   // 👤 si le toca ser comisionado
+      }
       await pintarAvanceRecluta();
     }
     catch (err) { alert(err.message); }
@@ -120,7 +127,7 @@
       .replace('Se evalúa en el siguiente', 'Tu evaluación sigue en el siguiente');
 
     tarjeta.innerHTML = `
-      <span>🔰 Soy recluta · meta: <strong>50% de asistencia</strong> en el tetramestre</span>
+      <span>🔰 Soy recluta · meta: <strong>50% de asistencia</strong> en el periodo</span>
       ${puedeSubir
         ? `<p class="recluta-listo">✅ ¡Cumpliste el 50% en el ${anterior.nombre}! El administrador ya puede subirte a jugador.</p>`
         : anterior.participo && anterior.r.porcentaje != null
@@ -157,14 +164,15 @@
     const tetraActual = tetraHoy ? club.TETRAS[tetraHoy - 1] : null;
     const asistenciaActual = tetraActual ? club.resumenAsistencia(datos, yo.id, { tetra: tetraHoy }) : anual;
     const torneos = club.resumenTorneos(datos, yo);
-    const textoProximo = proximo ? Portal.esc(club.esTorneo(proximo) ? club.nombreEvento(proximo) : proximo.nota || 'Entrenamiento') : '';
+    const textoProximo = proximo ? Portal.esc(club.esTorneo(proximo) ? club.nombreEvento(proximo)
+      : [proximo.nota || 'Entrenamiento', club.horaTexto(proximo.hora_inicio)].filter(Boolean).join(' · ')) : '';
     // 🏠 Inicio: lo más importante (Green Card o rol, asistencia y lo próximo).
     // Pits (staff): lleva asistencia, pero no paga Green Card (en su lugar se muestra su rol).
     document.getElementById('jugador-metricas').innerHTML = [
       esPits()
         ? club.metrica('Mi rol', '🔧 Pits', 'staff del equipo')
         : debe
-          ? club.metrica(club.nombreMembresia, `Debes ${club.dinero(debe * club.monto)}`, `${debe} ${debe === 1 ? 'mes pendiente' : 'meses pendientes'}`, 'alerta')
+          ? club.metrica(club.nombreMembresia, `Debes ${club.dinero(club.adeudo(meses))}`, `${debe} ${debe === 1 ? 'mes pendiente' : 'meses pendientes'}`, 'alerta')
           : club.metrica(club.nombreMembresia, 'Al corriente', textoPagadoHasta(meses), 'bien'),
       club.metrica(tetraActual ? `Asistencia · ${tetraActual.nombre}` : `Asistencia ${datos.anio}`, club.pct(asistenciaActual.porcentaje), tetraActual ? tetraActual.meses : ''),
       club.metrica('Próximo', proximo ? club.fechaCorta(proximo.fecha) : 'Sin fecha', textoProximo)
@@ -177,13 +185,17 @@
 
     // --- Green Card mes por mes ---
     const etiquetaPago = { pagado: 'Pagado', debe: 'Pendiente', proximo: '—', 'no-aplica': '' };
-    document.getElementById('mis-pagos').innerHTML = meses.map(m =>
-      `<div class="mes ${m.estado}" title="${m.pago ? `Pagado el ${club.fechaCorta(m.pago.fecha_pago)}` : ''}">
-        <span>${club.MESES_CORTOS[m.mes - 1]}</span><strong>${etiquetaPago[m.estado]}</strong>
-      </div>`).join('');
+    // Abono = parte de un mes ya pagada (lo que sobró de otro pago).
+    document.getElementById('mis-pagos').innerHTML = meses.map(m => m.abono
+      ? `<div class="mes ${m.estado} abono" title="Abonaste ${club.dinero(m.abono)}; faltan ${club.dinero(m.falta)}">
+          <span>${club.MESES_CORTOS[m.mes - 1]}</span><strong>Abono ${club.dinero(m.abono)}</strong>
+        </div>`
+      : `<div class="mes ${m.estado}" title="${m.pago ? `Pagado el ${club.fechaCorta(m.pago.fecha_pago)}` : ''}">
+          <span>${club.MESES_CORTOS[m.mes - 1]}</span><strong>${etiquetaPago[m.estado]}</strong>
+        </div>`).join('');
     document.getElementById('mi-monto').textContent = `Membresía mensual: ${club.dinero(club.monto)}.`;
 
-    // --- Asistencia por tetramestre ---
+    // --- Asistencia por periodo ---
     document.getElementById('mis-tetras').innerHTML = club.TETRAS
       .map(t => club.tarjetaTetra(t, club.resumenAsistencia(datos, yo.id, { tetra: t.numero }), t.numero === tetraHoy, club.resumenTorneos(datos, yo, { tetra: t.numero }))).join('');
 
@@ -202,7 +214,8 @@
     document.getElementById('mis-entrenamientos').innerHTML = misEntrenamientos.length
       ? misEntrenamientos.map(e => {
           const estado = miEstado(e, mios, hoy);
-          const detalle = Portal.esc(e.cancelado ? club.motivo(e) : club.esTorneo(e) ? club.nombreEvento(e) : e.nota || '');
+          const detalle = Portal.esc(e.cancelado ? club.motivo(e) : club.esTorneo(e) ? club.nombreEvento(e)
+            : [club.horaTexto(e.hora_inicio), e.nota].filter(Boolean).join(' · '));
           return `<li><span><strong>${club.rangoCorto(e)}</strong>${detalle ? ` · ${detalle}` : ''}</span>${CHIP[estado]}</li>`;
         }).join('')
       : `<li class="vacio">No hay entrenamientos en ${datos.anio}.</li>`;
@@ -222,7 +235,10 @@
       const estado = e ? miEstado(e, mios, hoy) : '';
       const clase = estado.startsWith('torneo') ? `torneo ${estado === 'torneoFue' ? 'fui' : ''}` : estado === 'proximo' ? 'programado' : estado;
       const diaDelTorneo = e && iso !== e.fecha ? ` · día ${club.diasDe({ fecha: e.fecha, fecha_fin: iso })}` : '';
-      const etiqueta = (estado === 'cancelado' ? club.motivo(e) || 'Cancelado' : ETIQUETA_DIA[estado] || '') + diaDelTorneo;
+      // Próximos entrenamientos: con su hora ("4:30 pm") si ya la tienen.
+      const etiqueta = (estado === 'cancelado' ? club.motivo(e) || 'Cancelado'
+        : estado === 'proximo' && e.hora_inicio ? club.horaCorta(e.hora_inicio)
+        : ETIQUETA_DIA[estado] || '') + diaDelTorneo;
       return `<div class="cal-dia ${clase} ${club.esFinDeSemana(iso) ? 'finde' : ''} ${iso === hoy ? 'hoy' : ''}"
         ${etiqueta ? `title="${Portal.esc(etiqueta)}"` : ''}>
         <span class="cal-num">${Number(iso.slice(8))}</span>${etiqueta ? `<small>${Portal.esc(etiqueta)}</small>` : ''}

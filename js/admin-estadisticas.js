@@ -1,11 +1,11 @@
 // =====================================================================
 // Pestaña "Estadísticas", separada por rol (Jugadores · Coaches · Pits · Reclutas):
 //   1. Resumen del grupo elegido.
-//   2. Tabla del grupo: por tetramestre o por mes (con filtro de categoría
+//   2. Tabla del grupo: por periodo o por mes (con filtro de categoría
 //      para jugadores y coaches).
 //   3. Asistencia por categoría (solo jugadores y coaches: los del roster).
 //   4. Asistencia a torneos (todo el equipo).
-//   5. Detalle individual: mes, tetramestre, año y días que faltó.
+//   5. Detalle individual: mes, periodo, año y días que faltó.
 // Los días cancelados y las faltas justificadas no cuentan en contra.
 // =====================================================================
 (() => {
@@ -270,7 +270,7 @@
     detalle.innerHTML = `
       <div class="metricas">
         ${jugador.rol === 'pits' ? club.metrica('Rol', '🔧 Pits', 'staff del equipo') : ''}
-        ${jugador.rol === 'recluta' ? club.metrica('Rol', '🔰 Recluta', 'a prueba: meta 50% por tetramestre') : ''}
+        ${jugador.rol === 'recluta' ? club.metrica('Rol', '🔰 Recluta', 'a prueba: meta 50% por periodo') : ''}
         ${admin.categorias && club.vaEnRoster(jugador) ? club.metrica('🎯 Categoría',Portal.esc(admin.nombreCategoria(admin.categoriaDe(jugador.id)) || 'Sin categoría'),
             Portal.esc(club.textoHistorial(admin.categorias, club.historialDe(admin.historial, jugador.id)))) : ''}
         ${club.metrica(`Asistencia ${datos.anio}`, club.pct(anual.porcentaje), `${anual.asistio} de ${anual.asistio + anual.falta} entrenamientos`)}
@@ -280,7 +280,7 @@
         ${club.metrica('🏆 Torneos (extra)', club.textoTorneos(torneos), torneos.fue ? `+${torneos.fue} asistencia extra` : '')}
       </div>
 
-      <h3 class="subtitulo">Por tetramestre</h3>
+      <h3 class="subtitulo">Por periodo</h3>
       <div class="tetras en-fila">
         ${club.TETRAS.map(t => club.tarjetaTetra(t, club.resumenAsistencia(datos, jugador.id, { tetra: t.numero }), t.numero === tetraHoy, club.resumenTorneos(datos, jugador, { tetra: t.numero }))).join('')}
       </div>

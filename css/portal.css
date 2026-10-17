@@ -232,6 +232,14 @@ dialog::backdrop { background: rgba(8, 25, 36, .6); }
 .celda.debe { background: var(--rojo-fondo); color: var(--rojo); }
 .celda.proximo { background: transparent; border-color: var(--linea); color: var(--suave); }
 .celda.no-aplica { color: var(--suave); }
+/* Abono: mes con una parte pagada (lo que sobró de otro pago) */
+.celda.abono { background: var(--ambar-fondo); color: var(--ambar); border-color: transparent; font-size: .75rem; }
+.meses .mes.abono { border-color: #d9a400; background: var(--ambar-fondo); }
+.meses .mes.abono strong { color: var(--ambar); }
+.chip.abono { background: var(--ambar-fondo); color: var(--ambar); }
+/* Mes que se está pagando, grande para que no haya confusión */
+.pago-mes { display: inline-block; margin-top: 6px; font-size: 1.4rem; font-weight: 800; color: var(--marca); }
+.pago-reparto { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--ambar-fondo); color: var(--ambar); }
 button.celda:hover { border-color: var(--marca); }
 .leyenda { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: .92rem; }
 .leyenda .celda { min-width: 40px; min-height: 0; padding: 4px 6px; text-align: center; }
@@ -326,6 +334,22 @@ button.cal-dia:hover { border-color: var(--vivo); }
 /* Llegada registrada por el propio jugador con el QR (en Pasar lista) */
 .marca-qr { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; background: #e3efff; color: #1d4f9c; font-size: .75rem; font-weight: 700; }
 
+/* Comisionado (Pits que va en lugar del admin) */
+.chip.comisionado { background: #e3efff; color: #1d4f9c; }
+.tarjeta-comision { display: grid; gap: 4px; padding: 16px 18px; border-radius: 16px; background: #e3efff; color: #1d4f9c; border: 2px solid #9cc0f5; }
+.tarjeta-comision > span { font-weight: 700; }
+.tarjeta-comision strong { font-size: 1.35rem; }
+.tarjeta-comision .acciones { margin-top: 8px; }
+.com-contador { margin: 10px 0 0; text-align: center; font-size: 1.2rem; }
+.lista-comisionado li { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+#dialogo-comisionado .qr-pantalla { margin-top: 12px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip.comisionado, :root:not([data-theme="light"]) .tarjeta-comision { background: #1b2d4a; color: #a9c8ff; border-color: #2c4a78; }
+}
+
+/* Debe la Green Card del mes: no se le puede marcar "llegó" hasta que pague */
+.marca-debe { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; background: var(--ambar-fondo); color: var(--ambar); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+
 /* Reporte de asistencia (📄 PDF): oculto en pantalla, solo al imprimir */
 #reporte { display: none; }
 @media print {
@@ -349,6 +373,7 @@ button.cal-dia:hover { border-color: var(--vivo); }
 
 /* Botón y ventana para escanear el QR desde el portal */
 .boton-escanear { min-height: 64px; font-size: 1.25rem; margin-top: 0; }
+.aviso-pago-qr { margin: -4px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--ambar-fondo); color: var(--ambar); font-weight: 600; }
 .escaner-camara { position: relative; aspect-ratio: 1; margin-top: 8px; background: #000; border-radius: 16px; overflow: hidden; }
 .escaner-camara video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .escaner-marco { position: absolute; inset: 14%; border: 4px solid #fff; border-radius: 20px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); pointer-events: none; }

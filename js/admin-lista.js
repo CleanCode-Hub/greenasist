@@ -26,6 +26,8 @@
   const etiqueta = estado => (club.esTorneo(entrenamiento) ? ESTADO_TORNEO : ESTADO)[estado];
   let entrenamiento = null, jugadores = [], estados = new Map(), huboCambios = false;
   let porQR = new Set();   // quienes registraron su llegada con el QR (15-llegada-por-qr.sql)
+  // Sin la Green Card del mes pagada no se puede marcar "llegó" (16-asistencia-requiere-pago.sql).
+  const debe = j => club.debeMesDe(admin.datos.pagos, j, entrenamiento.fecha);
 
   admin.abrirLista = function (id) {
     entrenamiento = admin.datos.entrenamientos.find(e => e.id === id);
@@ -51,7 +53,7 @@
     const estado = estados.get(j.id) || '';
     return `<li class="jugador-fila ${estado}" data-buscar="${Portal.esc(Portal.textoBusqueda(j))}">
       <button type="button" class="jugador-boton" data-marcar="${j.id}" aria-pressed="${estado === 'asistio'}">
-        <span class="jugador-nombre">${Portal.esc(j.nombre_completo)}${club.marcaRol(j.rol)}</span>
+        <span class="jugador-nombre">${Portal.esc(j.nombre_completo)}${club.marcaRol(j.rol)}${debe(j) ? ` <small class="marca-debe">💵 Debe ${club.nombreMes(entrenamiento.fecha)}</small>` : ''}</span>
         <span class="jugador-estado">${etiqueta(estado)}${porQR.has(j.id) ? ' <small class="marca-qr">📱 QR</small>' : ''}</span>
       </button>
       <button type="button" class="jugador-justificar" data-justificar="${j.id}">${estado === 'justificada' ? 'Quitar justificación' : 'Justificar'}</button>
@@ -96,7 +98,9 @@
       // Se regresa como estaba para no mostrar algo que no se guardó.
       if (anterior) estados.set(jugadorId, anterior); else estados.delete(jugadorId);
       repintarFila(jugadorId);
-      error.textContent = 'No se pudo guardar. Revisa tu conexión e inténtalo otra vez.';
+      error.textContent = errorBD.message?.includes('GREEN_CARD_PENDIENTE')
+        ? 'No ha pagado la Green Card de ese mes. Registra el pago para marcar su llegada.'
+        : 'No se pudo guardar. Revisa tu conexión e inténtalo otra vez.';
       return;
     }
     huboCambios = true;
@@ -113,7 +117,19 @@
     const marcar = e.target.closest('[data-marcar]');
     if (marcar) {
       const id = marcar.dataset.marcar;
-      guardar(id, estados.get(id) === 'asistio' ? 'falta' : 'asistio');
+      const nuevo = estados.get(id) === 'asistio' ? 'falta' : 'asistio';
+      const j = jugadores.find(x => x.id === id);
+      // Debe la Green Card del mes: primero el pago; al guardarlo se marca "llegó" solo.
+      if (nuevo === 'asistio' && debe(j)) {
+        const mes = club.nombreMes(entrenamiento.fecha);
+        if (confirm(`${j.nombre_completo} no ha pagado la Green Card de ${mes}.\n\nSin el pago no se puede marcar su llegada. ¿Registrar el pago ahora?`)) {
+          admin.abrirPago(j, Number(entrenamiento.fecha.slice(5, 7)), () => {
+            if (!debe(j)) { repintarFila(id); guardar(id, 'asistio'); }
+          });
+        }
+        return;
+      }
+      guardar(id, nuevo);
       return;
     }
     const justificar = e.target.closest('[data-justificar]');

@@ -51,12 +51,9 @@
     const jugadores = admin.jugadoresActivos();
     const sinCategoria = jugadores.filter(j => !admin.categoriaDe(j.id));
 
-    const sinCoach = admin.categorias.filter(c => !admin.coachesDe(c.id).length);
     resumen.innerHTML = [
       club.metrica('En el roster', jugadores.length - sinCategoria.length, `de ${jugadores.length} activos`),
-      club.metrica('Sin categoría', sinCategoria.length, sinCategoria.length ? 'falta asignarlos' : 'todos asignados', sinCategoria.length ? 'alerta' : 'bien'),
-      club.metrica('🧢 Categorías sin coach', sinCoach.length,
-        sinCoach.length ? Portal.esc(sinCoach.map(c => c.nombre).join(', ')) : 'todas tienen coach', sinCoach.length ? 'alerta' : 'bien')
+      club.metrica('Sin categoría', sinCategoria.length, sinCategoria.length ? 'falta asignarlos' : 'todos asignados', sinCategoria.length ? 'alerta' : 'bien')
     ].join('');
 
     // Línea "🧢 Coach: …" de cada categoría.

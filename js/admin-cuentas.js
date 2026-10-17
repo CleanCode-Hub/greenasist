@@ -100,9 +100,9 @@
       rol: formEditar.elements.rol.disabled ? editando.rol : formEditar.elements.rol.value,
       fechaAlta: formEditar.elements.fechaAlta.value
     };
-    // Un recluta solo sube a jugador o coach si cumplió el 50% en un tetramestre terminado.
+    // Un recluta solo sube a jugador o coach si cumplió el 50% en un periodo terminado.
     if (editando.rol === 'recluta' && ['jugador', 'coach'].includes(datos.rol) && !admin.reclutaPuedeSubir(editando.id)) {
-      errorEditar.textContent = 'Este recluta todavía no cumple el 50% de asistencia en un tetramestre terminado. Revisa su avance en 🔰 Reclutas.';
+      errorEditar.textContent = 'Este recluta todavía no cumple el 50% de asistencia en un periodo terminado. Revisa su avance en 🔰 Reclutas.';
       return;
     }
     const cambiaUsuario = datos.usuario !== editando.usuario;

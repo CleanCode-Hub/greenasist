@@ -30,7 +30,8 @@
         principal.innerHTML = `${encabezado}
           <p class="hoy-estado">${club.esTorneo(e)
             ? `🏆 Hoy hay torneo${e.nota ? ` · <strong>${Portal.esc(e.nota)}</strong>` : ''}<br><small>Asistencia extra: suma, faltar no cuenta en contra.</small>`
-            : `✅ Hay entrenamiento${e.nota ? ` · ${Portal.esc(e.nota)}` : ''}`}</p>
+            : `✅ Hay entrenamiento${e.hora_inicio ? ` a las <strong>${club.horaTexto(e.hora_inicio)}</strong>` : ''}${e.nota ? ` · ${Portal.esc(e.nota)}` : ''}`}</p>
+          ${(c => c ? `<p><span class="chip comisionado">👤 Comisionado: ${Portal.esc(c.nombre_completo)}</span></p>` : '')(admin.cuentas.find(c => c.id === e.comisionado_id))}
           ${lista.length ? `<p class="hoy-contador">${llegaron} de ${total} ${club.esTorneo(e) ? 'fueron' : 'llegaron'}</p>` : ''}
           <div class="acciones">
             <button type="button" class="primario enorme" data-hoy-qr="${e.id}">📱 Mostrar QR de llegada</button>

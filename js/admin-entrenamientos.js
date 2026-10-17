@@ -7,7 +7,7 @@
   const contenedor = document.getElementById('lista-entrenamientos');
   const formSabados = document.getElementById('form-sabados');
 
-  // --- Lista agrupada por tetramestre -------------------------------
+  // --- Lista agrupada por periodo -------------------------------
   admin.vistas.entrenamientos = function () {
     const { entrenamientos, asistencias } = admin.datos;
     if (!entrenamientos.length) {
