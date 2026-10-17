@@ -46,7 +46,7 @@
 
   // Muestra u oculta lo escrito en los campos de contraseña nueva.
   function mostrarCampos(visible) {
-    Portal.verContrasena(form.elements.nueva, visible);   // también cambia el 👁️ / 🙈
+    Portal.verContrasena(form.elements.nueva, visible);   // también cambia el ícono del ojo
     Portal.verContrasena(form.elements.confirmar, visible);
   }
 

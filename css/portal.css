@@ -77,11 +77,12 @@ button:disabled { opacity: .6; cursor: wait; }
 .acciones.columna { flex-direction: column; align-items: stretch; }
 .acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .con-boton { display: flex; gap: 8px; align-items: end; }
-/* Campo de contraseña con botón 👁️ para ver lo escrito */
+/* Campo de contraseña con botón de ojo para ver lo escrito */
 .campo-contrasena { position: relative; display: block; flex: 1; min-width: 0; }
 .campo-contrasena input { padding-right: 54px; }
-.ver-contrasena { position: absolute; right: 3px; bottom: 3px; width: 48px; height: calc(var(--toque) - 6px); padding: 0; border: 0; border-radius: 8px; background: transparent; font-size: 1.25rem; line-height: 1; cursor: pointer; }
-.ver-contrasena:hover { background: var(--gris-chip); }
+.ver-contrasena { position: absolute; right: 3px; bottom: 3px; width: 48px; height: calc(var(--toque) - 6px); padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--suave); cursor: pointer; display: grid; place-items: center; }
+.ver-contrasena svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ver-contrasena:hover { background: var(--gris-chip); color: var(--tinta); }
 .con-boton .secundario, .con-boton .primario { white-space: nowrap; }
 .enlace { border: 0; background: none; padding: 4px 0; color: var(--marca); font: inherit; font-weight: 650; text-align: left; text-decoration: underline; text-underline-offset: 3px; }
 
